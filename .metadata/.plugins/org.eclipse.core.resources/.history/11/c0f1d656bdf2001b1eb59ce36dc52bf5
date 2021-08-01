@@ -17,7 +17,7 @@ public class MediaService {
 		try {
 
 			if (valorA == 0.0 || valorB == 0.0) {
-				return media;
+
 			} else {
 				media = (valorA + valorB) / 2;
 			}
