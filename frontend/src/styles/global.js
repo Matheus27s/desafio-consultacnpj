@@ -15,10 +15,11 @@ export default createGlobalStyle`
     -webkit-font-smoothing: antialiased; 
     width: 25rem;
     margin: 5rem auto;
+    padding: 1rem;
   }
 
   body, input, button {
-    font-family: 'Roboto';
+    font-family: 'Inter', sans-serif;    
     font-size: 1rem;
   }
 

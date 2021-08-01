@@ -3,6 +3,9 @@ import Button from "../../components/Button";
 import Input from "../../components/Input";
 import InputCnpjMask from "../../components/InputCnpjMask";
 
+import { Dots } from "react-activity";
+import "react-activity/dist/Dots.css";
+
 import { FiMapPin } from "react-icons/fi";
 
 import { Form } from "@unform/web";
@@ -10,16 +13,31 @@ import * as Yup from "yup";
 import getValidationErros from "../../utils/getValidationErros";
 import api from "../../services/api";
 
-import { ContainerCnpj, Gap, ContainerCard, Card } from "./styles";
+import {
+  ContainerCnpj,
+  Gap,
+  ContainerCard,
+  Card,
+  ContainerMedia,
+  ErrorMessage
+} from "./styles";
 
 const Home = () => {
   const formRef = useRef(null);
   const formMediaRef = useRef(null);
-
-  const [isCard, setIsCard] = useState(false);
   const [endereco, setEndereco] = useState({});
   const [messageError, setMessageError] = useState("");
-  const [media, setMedia] = useState("");
+  const [media, setMedia] = useState(-1);
+
+  // ? (1) Mostrar o Card
+
+  /*
+  ? (1) Mostrar o Card
+  ! (2) Mostrar o Erro
+  * (3) Mostrar o Loading
+    (0) Mostrar nada
+  */
+  const [showCurrentComponent, setShowCurrentCompoment] = useState(0);
 
   const handleCnpj = async (cnpjProps) => {
     const formatCnpjProps = cnpjProps.replace(/([^\d])+/gim, "");
@@ -34,9 +52,11 @@ const Home = () => {
           "CNPJ não existe, por favor verifique a quantidade de número digitados."
       ) {
         setMessageError(response.data);
+        setShowCurrentCompoment(2);
         return false;
       } else {
         setEndereco(response.data);
+        setShowCurrentCompoment(1);
         setMessageError("");
         return true;
       }
@@ -49,8 +69,6 @@ const Home = () => {
   const handleCalcMedia = async (data) => {
     try {
       const response = await api.post("media/", data);
-      console.log(response.data.total)
-
       setMedia(response.data.total);
     } catch (err) {
       console.log(err.message);
@@ -59,6 +77,8 @@ const Home = () => {
   };
 
   const handleSubmit = async (data) => {
+    setShowCurrentCompoment(3);
+
     try {
       formRef.current?.setErrors({});
       const schema = Yup.object().shape({
@@ -69,15 +89,11 @@ const Home = () => {
         abortEarly: false, // Retorna todos os erros
       });
 
-      if (handleCnpj(data.cnpj)) {
-        setIsCard(true);
-      } else {
-        setIsCard(false);
-      }
-
-      //signIn(data);
+      handleCnpj(data.cnpj);
     } catch (err) {
       if (err instanceof Yup.ValidationError) {
+        setShowCurrentCompoment(2);
+
         const erros = getValidationErros(err);
         formRef.current?.setErrors(erros);
         return;
@@ -94,7 +110,7 @@ const Home = () => {
       });
 
       await schema.validate(data, {
-        abortEarly: false, // Retorna todos os erros
+        abortEarly: false, // Retorna todos os erross
       });
 
       handleCalcMedia(data);
@@ -120,33 +136,37 @@ const Home = () => {
         </ContainerCnpj>
       </Form>
 
-      {isCard && (
-        <ContainerCard>
-          {messageError !== "" ? (
-            <p>{messageError}</p>
-          ) : (
+      {showCurrentComponent === 1 && (
+        <>
+          <ContainerCard>
             <Card>
               <strong>Endereço</strong>
-              <p>{endereco.logradouro}</p>
-              <p>{endereco.bairro}</p>
-              <p>{endereco.numero}</p>
-              <p>{endereco.municipio}</p>
-              <p>CEP {endereco.cep}</p>
+              <p>Empresa: {endereco.nome}</p>
+              <p>Logradouro: {endereco.logradouro}</p>
+              <p>Bairro: {endereco.bairro}</p>
+              <p>Nº: {endereco.numero}</p>
+              <p>UF: {endereco.uf}</p>
+              <p>CEP: {endereco.cep}</p>
             </Card>
-          )}
-        </ContainerCard>
-      )}
+          </ContainerCard>
 
-      {messageError === "" && isCard && (
-        <>
           <Form ref={formMediaRef} onSubmit={handleSubmitMedia}>
-            <Input type="text" name="valorA" label="Valor A" />
-            <Input type="text" name="valorB" label="Valor B" />
+            <Input step="0.01" type="number" name="valorA" label="Valor A" />
+            <Input step="0.01" type="number" name="valorB" label="Valor B" />
             <Button type="submit">Calcular Média</Button>
           </Form>
-          <strong>A média é: {media}</strong>
+
+          {media >= 0 && (
+            <ContainerMedia>
+              <p>A média é: </p>
+              <strong>{media}</strong>
+            </ContainerMedia>
+          )}
         </>
       )}
+
+      {showCurrentComponent === 2 && <ErrorMessage>{messageError}</ErrorMessage>}
+      {showCurrentComponent === 3 && <Dots color="#AC5EEA"/> }
     </>
   );
 };

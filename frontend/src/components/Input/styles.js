@@ -1,4 +1,4 @@
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 import Tooltip from "../Tooltip";
 
 export const Container = styled.div`
@@ -24,30 +24,9 @@ export const ContainerInput = styled.div`
   background: #FFF;
   color: #9C9C9C;
 
-  // Todo input que seja precedido por outro.
   & + div {
     margin-top: 8px;
   }
-
-  ${(props) =>
-    props.isErrored &&
-    css`
-      border-color: #c53030;
-    `}
-
-  ${(props) =>
-    props.isFocused &&
-    css`
-      color: #AC5EEA;
-      border-color: #AC5EEA;
-    `}
-
-  ${(props) =>
-    props.isField &&
-    css`
-      color: #AC5EEA;
-      border-color: #AC5EEA;
-    `}
 
   display: flex;
   align-items: center;
